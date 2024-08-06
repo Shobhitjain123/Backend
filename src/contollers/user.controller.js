@@ -14,15 +14,17 @@ const registerUser = asyncHandler( async (req, res) => {
     // check for user creation
     // return res   
 
+    console.log('Request files:', req.files);
+    console.log('Request body:', req.body);
+
     // Validation- No Field is empty
     const {fullname, email, username, password} = req.body
-    console.log("Email: ", email);
     if([fullname, email, username, password].some(el => el?.trim() === "")){
         throw new ApiError(400, "All fields are required")
     }
 
     // Validation - User already exists
-    const existingUser = User.findOne({
+    const existingUser = await User.findOne({
         $or: [{username}, {email}]
     })
     if(existingUser) 
@@ -31,18 +33,22 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     // Upload and check for images
-        const avatarLocalPath = req.files?.avatar[0]?.path
-        const coverImageLocalPath = req.files?.coverImage[0]?.path
+        const avatarLocalPath = req.files?.avatar?.[0]?.path
+        const coverImageLocalPath = req.files?.coverImage?.[0]?.path
         if(!avatarLocalPath){
             throw new ApiError(400, "Avatar file is required")
         }
     
+        console.log(coverImageLocalPath);
+        
+
     // Uploading file on cloudinary
        const avatar = await uploadOnCloudinary(avatarLocalPath)
-       const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+       const coverImage =  await uploadOnCloudinary(coverImageLocalPath);
+   
     // Check if Avatar is successfully uploaded
         if(!avatar){
-            throw new ApiError(400, "Avatar file is required")
+            throw new ApiError(400, "Avatar file is required on cloudinary")
         }
     
     // Create user object entry in database
@@ -65,7 +71,10 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(500, "Something went wrong while registring the user")
     }
 
-    return new ApiResponse(201, userCreated, "User is registered successfully")
+    return res.status(200).json(
+        new ApiResponse(201, userCreated, "User is registered successfully")
+    )
+
 } )
 
 export {registerUser}

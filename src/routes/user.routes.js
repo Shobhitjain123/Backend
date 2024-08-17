@@ -38,7 +38,7 @@ router.route('/changePassword').post(verifyJWT, changeCurrentPassword)
 router.route('/current-user-info').get(verifyJWT, getCurrentUser)
 router.route('/updateAccount').patch(verifyJWT, updateUserAccount)
 router.route('/updateAvatar').patch(verifyJWT, upload.single("avatar"), updateAvatarImage)
-router.route('/updateCovrImage').patch(verifyJWT, upload.single("coverImage"), updateCoverImage)
+router.route('/updateCoverImage').patch(verifyJWT, upload.single("coverImage"), updateCoverImage)
 router.route('/c/:username').get(verifyJWT, getUserProfileDetails)
 router.route('/watchHistory').get(verifyJWT, getWatchHistory)
 export default router

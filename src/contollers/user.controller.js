@@ -4,6 +4,7 @@ import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const generateAccessAndRefreshToken = async (userId) => {  
   try {
@@ -245,6 +246,10 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   // Get oldPassword and new Password from request body
   const { oldPassword, newPassword } = req.body;
 
+  if(!(oldPassword || newPassword)){
+    throw new ApiError("Old or New password is required")
+  }
+
   // Validate oldPassword is correct as per current loggedIn user
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
   if (!isPasswordCorrect) {
@@ -264,13 +269,13 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, 'Current user fetched successfully');
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
 const updateUserAccount = asyncHandler(async (req, res) => {
-  const { fullname, email } = re.body;
+  const { fullname, email } = req.body;
 
-  const user = await User.findById(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -322,12 +327,12 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   try {
     const coverLocalPath = req.file?.path;
     if (!coverLocalPath) {
-      throw new ApiError(400, 'Avatar file is missing');
+      throw new ApiError(400, 'Cover image file is missing');
     }
 
     const coverImage = await uploadOnCloudinary(coverLocalPath);
     if (!coverImage) {
-      throw new ApiError(400, 'Error while uploading avatar image');
+      throw new ApiError(400, 'Error while uploading cover image');
     }
 
     const user = await User.findByIdAndUpdate(
@@ -335,7 +340,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
       {
         $set: {
           coverImage: coverImage.url,
-        },
+        },  
       },
       {
         new: true,
@@ -383,9 +388,9 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
         subscribeToCount: {
           $size: '$subscribeTo',
         },
-        isSubsrcibed: {
+        isSubscribed: {
           $cond: {
-            if: {$in: [req.user?._id, "$.subscribers.subscriber"]},
+            if: {$in: [req.user?._id, "$subscribers.subscriber"]},
             then: true,
             else: false
           }
@@ -401,7 +406,7 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
         avatar: 1,
         subscribeToCount: 1,
         subscriberCount: 1,
-        isSubsrcibed: 1
+        isSubscribed: 1
 
       }
     }
@@ -459,7 +464,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 
      res
      .status(200)
-     .json(200, new ApiResponse(200, user[0].watchHistory), "Watch History Fetched successfully")
+     .json(new ApiResponse(200, user[0].watchHistory, "Watch History Fetched successfully"))
 })
 
 export {

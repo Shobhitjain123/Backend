@@ -462,7 +462,6 @@ const getWatchHistory = asyncHandler(async(req, res) => {
      .json(200, new ApiResponse(200, user[0].watchHistory), "Watch History Fetched successfully")
 })
 
-
 export {
   registerUser,
   loginUser,
